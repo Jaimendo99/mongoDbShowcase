@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .action-buttons, .add-button-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .edit-btn, .update-btn, .add-btn, .delete-btn {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+        }
+        .edit-btn, .update-btn, .add-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .update-btn {
+            background-color: #3498db;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .table-input {
+            width: 50%;
+            border: none;
+            margin: 0;
+            background-color: #f2f2f2;
+            padding: 5px;
+        }
+    </style>
+    <script src="https://unpkg.com/htmx.org@1.7.0/dist/htmx.js"></script>
+</head>
+<body>
+
+    <div id="resultados">
+        
+    </div>
+
+    
+    
+<form  method="post" hx-post="/update_socio"  hx-target="#resultados" hx-swap="outerHTML"></form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Cedula</th>
+            <th>Licencia</th>
+            <th>Sector</th>
+            <th>Calle</th>
+            <th>Avenida</th>
+            <th>Numero</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for socio in socios %}
+        <tr id="{{ socio['_id'] }}">
+
+                <td>{{ socio['_id'] }}</td>
+                <td>{{ socio['Nombre'] }}</td>
+                <td>{{ socio['Apellido'] }}</td>
+                <td>{{ socio['Cedula'] }}</td>
+                <td>{{ socio['TipoDeLicencia'] }}</td>
+                {% if 'Direccion' in socio %}
+                    <td>{{ socio['Direccion']['Sector'] }}</td>
+                    <td>{{ socio['Direccion']['CallePrincipal'] }}</td>
+                    <td>{{ socio['Direccion']['CalleSecundaria'] }}</td>
+                    <td>{{ socio['Direccion']['Numero'] }}</td>
+                {% else %}
+                    <td colspan="4">No address available</td>
+                {% endif %}
+                <td class="action-buttons">
+                    <button type="button" class="edit-btn" onclick="edit(event)" identifier="{{ socio['_id'] }}"  >Edit</button>
+                    <button hidden disabled type="submit" class="update-btn" onclick="" form="update_form" value="Update">Update</button>
+                    <button class="delete-btn" hx-delete="/delete_socio/{{ socio['_id'] }}" hx-confirm="Are you sure?" hx-target="#resultados" hx-swap="outerHTML"  >Delete</button>
+
+                </td>
+            </tr>
+        {% endfor %}
+        
+    </tbody>
+</table>
+<form hx-post = "/add_socio" hx-target="#resultados" hx-swap="outerHTM"> 
+    <div class="add-button-container">
+        <button class="add-btn" type="submit">Add Socio</button>
+    </div>
+
+    <input type="text" placeholder="Nombre" name="Nombre">
+    <input type="text" placeholder="Apellido" name="Apellido">
+    <input type="text" placeholder="Cedula" name="Cedula">
+    <input type="text" placeholder="TipoDeLicencia" name="TipoDeLicencia">
+    <input type="text" placeholder="Sector" name="Sector">
+    <input type="text" placeholder="Calle Principal" name="CallePrincipal">
+    <input type="text" placeholder="Calle Secundaria" name="CalleSecundaria">
+    <input type="text" placeholder="Numero" name="Numero">
+    
+
+</form>
+
+
+<script>
+
+    edit = (event)=>{
+       console.log("onclick start") 
+        const id = event.target.getAttribute("identifier");
+        let row = document.querySelector(`[id="${id}"]`); 
+        let rows = row.getElementsByTagName("td");
+        var values = [].slice.call(rows).slice(0,9);
+        values[0].innerHTML = `<input name="_id" value=${id} class="table-input" form="update_form" readonly ></input>`
+        
+        var editBtn = rows[9].getElementsByClassName("edit-btn")[0];
+        editBtn.setAttribute("disabled", true); 
+        editBtn.setAttribute("hidden", true);
+        var updateBtn = rows[9].getElementsByClassName("update-btn")[0];
+        updateBtn.removeAttribute("hidden");
+        updateBtn.removeAttribute("disabled");
+   
+        
+        for (let i = 1; i < values.length; i++){
+            const v = values[i].innerHTML
+            const list = ["", 'Nombre', 'Apellido', 'Cedula', 'TipoDeLicencia', 'Sector', 'CallePrincipal', 'CalleSecundaria', 'Numero']
+            values[i].innerHTML = `<input name=${list[i]} value=${v} class="table-input" form="update_form"></input>`
+            
+        }
+        updateForm = document.querySelector("form[hx-post='/update_socio']")
+        updateForm.setAttribute("id", "update_form")
+        console.log("onclick end")
+    }
+    
+
+
+
+</script>
+
+</body>
+</html>
